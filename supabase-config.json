@@ -1,5 +1,5 @@
 {
-  "supabaseUrl": "https://your-project.supabase.co",
-  "supabaseKey": "your-anon-key",
-  "projectId": "your-project"
+  "supabaseUrl": "https://tunyvbgshjdrmheahdfy.supabase.co",
+  "supabaseKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1bnl2YmdzaGpkcm1oZWFoZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjE5NDEsImV4cCI6MjA5MjYzNzk0MX0.AuEDlrFL0zFv5sx5oAs7EeTeEz61R_EicuW980mMqfI",
+  "projectId": "tunyvbgshjdrmheahdfy"
 }
