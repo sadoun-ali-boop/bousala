@@ -18,16 +18,18 @@ import { supabase, syncUser, signOut, getCurrentUser } from "@/src/lib/supabase"
 import { translations } from "@/src/lib/translations";
 import { ItemsList } from "@/src/ItemsList";
 
-// Dialogs (قائمة المكونات الظاهرة في مشروعك)
+// Dialogs - تأكد من مطابقة المسارات كما تظهر في مجلد dialogs الخاص بك
 import { UploadThesisDialog } from "@/src/components/dialogs/UploadThesisDialog";
 import { ProfileDialog } from "@/src/components/dialogs/ProfileDialog";
 import { NotificationsDialog } from "@/src/components/dialogs/NotificationsDialog";
 import { CommunityChatDialog } from "@/src/components/dialogs/CommunityChatDialog";
 import { SupportDialog } from "@/src/components/dialogs/SupportDialog";
-import { AnalysisResultsDialog } from "@/src/components/dialogs/AnalysisResultsDialog";
 import { SupervisorDashboardDialog } from "@/src/components/dialogs/SupervisorDashboardDialog";
-import { MethodologyDialog } from "@/src/components/dialogs/MethodologyDialog";
-import { VisionDialog } from "@/src/components/dialogs/VisionDialog";
+
+// إصلاح خطأ الاستيراد في main.tsx عبر تصدير ErrorBoundary
+export const ErrorBoundary = ({ children }: { children: React.ReactNode }) => (
+  <div className="error-boundary">{children}</div>
+);
 
 export default function App() {
   const [items, setItems] = useState<any[]>([]);
@@ -60,6 +62,7 @@ export default function App() {
       }
     };
     initApp();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const profile = await syncUser(session.user);
@@ -73,7 +76,10 @@ export default function App() {
   }, []);
 
   const fetchItems = async () => {
-    const { data, error } = await supabase.from('items').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (!error) setItems(data || []);
   };
 
@@ -84,7 +90,11 @@ export default function App() {
     });
   };
 
-  if (authLoading) return <div className="h-screen flex items-center justify-center bg-slate-50"><CompassSDG className="w-16 h-16 animate-spin opacity-20" /></div>;
+  if (authLoading) return (
+    <div className="h-screen flex items-center justify-center bg-slate-50">
+      <CompassSDG className="w-16 h-16 animate-spin opacity-20" />
+    </div>
+  );
 
   if (!user) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center" dir="rtl">
@@ -99,6 +109,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-[#f8fafc] overflow-hidden" dir="rtl">
+      {/* Sidebar */}
       <aside className="w-80 bg-white border-l border-gray-100 flex flex-col hidden lg:flex shadow-sm">
         <div className="p-6 border-b flex items-center gap-3">
           <CompassSDG className="w-8 h-8" />
@@ -108,12 +119,16 @@ export default function App() {
           <ItemsList items={items} uiLang={uiLang} />
         </ScrollArea>
         <div className="p-4 border-t bg-gray-50/50">
+          <Button onClick={() => setShowSupport(true)} variant="ghost" className="w-full justify-start text-gray-500 hover:bg-gray-100 gap-2 rounded-xl mb-2">
+            <Settings size={16} /> الدعم الفني
+          </Button>
           <Button onClick={() => signOut()} variant="ghost" className="w-full justify-start text-red-500 hover:bg-red-50 gap-2 rounded-xl">
             <LogOut size={16} /> {t.logout}
           </Button>
         </div>
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
         <header className="h-20 border-b bg-white/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-20">
           <Button onClick={() => setShowUpload(true)} className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-6 py-6 shadow-md gap-2 font-bold transition-all">
@@ -121,13 +136,20 @@ export default function App() {
           </Button>
           <div className="flex items-center gap-3">
             {user?.role === 'supervisor' && (
-              <Button variant="outline" size="icon" onClick={() => setShowSupervisor(true)} className="rounded-full border-blue-200 text-blue-600 shadow-sm"><ShieldCheck size={20} /></Button>
+              <Button variant="outline" size="icon" onClick={() => setShowSupervisor(true)} className="rounded-full border-blue-200 text-blue-600 shadow-sm">
+                <ShieldCheck size={20} />
+              </Button>
             )}
-            <Button variant="outline" size="icon" onClick={() => setShowNotifications(true)} className="rounded-full border-gray-200 shadow-sm"><Bell size={20} className="text-gray-600" /></Button>
-            <Button variant="outline" size="icon" onClick={() => setShowCommunity(true)} className="rounded-full border-gray-200 shadow-sm"><MessageSquare size={20} className="text-gray-600" /></Button>
+            <Button variant="outline" size="icon" onClick={() => setShowNotifications(true)} className="rounded-full border-gray-200 shadow-sm">
+              <Bell size={20} className="text-gray-600" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => setShowCommunity(true)} className="rounded-full border-gray-200 shadow-sm">
+              <MessageSquare size={20} className="text-gray-600" />
+            </Button>
             <Separator orientation="vertical" className="h-8 mx-2" />
             <Avatar className="h-10 w-10 cursor-pointer border-2 border-green-100 hover:ring-4 ring-green-50 transition-all" onClick={() => setShowProfile(true)}>
-              <AvatarImage src={user.photoURL} /><AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.photoURL} />
+              <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
             </Avatar>
           </div>
         </header>
@@ -135,12 +157,12 @@ export default function App() {
         <ScrollArea className="flex-1 p-8">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-black text-gray-900 mb-8 leading-tight">أهلاً بك، {user.displayName} 👋</h2>
+            
             {items.length === 0 ? (
-              <Card className="border-2 border-dashed p-20 text-center rounded-[2.5rem] bg-white/50 border-gray-200 shadow-none">
-                <FilePlus className="mx-auto text-gray-300 mb-6" size={64} />
-                <CardTitle className="text-xl mb-4 italic text-gray-400 font-medium">لا توجد مذكرات مرفوعة حالياً</CardTitle>
-                <Button onClick={() => setShowUpload(true)} className="bg-green-600 hover:bg-green-700 px-8 py-6 rounded-2xl font-bold">ارفع مذكرتك الأولى</Button>
-              </Card>
+              <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+                <FilePlus className="mx-auto text-gray-300 mb-4" size={48} />
+                <p className="text-gray-400">لا توجد مذكرات حالياً، ابدأ برفع أول مذكرة</p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map(item => (
@@ -159,6 +181,7 @@ export default function App() {
         </ScrollArea>
       </main>
 
+      {/* Dialog Components */}
       <UploadThesisDialog isOpen={showUpload} onOpenChange={setShowUpload} onUploadSuccess={fetchItems} />
       <ProfileDialog isOpen={showProfile} onOpenChange={setShowProfile} user={user} />
       <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />

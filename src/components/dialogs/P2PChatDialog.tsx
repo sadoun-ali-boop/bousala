@@ -48,17 +48,17 @@ export function P2PChatDialog({
         .catch(err => console.error('Error fetching messages:', err));
       
       // Subscribe to real-time updates
-      const subscription = supabase
-        .from('p2p_messages')
-        .on('INSERT', payload => {
-          if (payload.new.chatID === chatID) {
+      const channel = supabase
+        .channel(`p2p:${chatID}`)
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'p2p_messages', filter: `chatID=eq.${chatID}` }, 
+          (payload) => {
             setMessages(prev => [...prev, payload.new as P2PMessage]);
-          }
-        })
+          })
         .subscribe();
       
       return () => {
-        subscription.unsubscribe();
+        supabase.removeChannel(channel);
       };
     }
   }, [isOpen, partner, currentUser]);
@@ -123,7 +123,7 @@ export function P2PChatDialog({
                     "text-[8px] mt-1 font-bold uppercase opacity-50",
                     isMe ? "text-right" : "text-left"
                   )}>
-                    {msg.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {msg.timestamp && new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>

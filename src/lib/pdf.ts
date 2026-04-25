@@ -1,7 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AnalysisResult } from './gemini';
-import { UserProfile } from './firebase';
+import { UserProfile } from './supabase'; // تم التحديث ليطابق استخدام Supabase في بقية المشروع
+
+// ملاحظة: يجب وضع كود Base64 للخط هنا. يمكنك الحصول عليه بتحويل ملف font.ttf إلى base64
+const AMIRI_FONT_BASE64 = "AAEAAA... (طويل جداً) ..."; 
 
 export const generatePDF = (result: AnalysisResult, user: UserProfile) => {
   const doc = new jsPDF({
@@ -10,51 +13,55 @@ export const generatePDF = (result: AnalysisResult, user: UserProfile) => {
     format: 'a4',
   });
 
-  // Basic RTL support is limited in standard jsPDF without custom fonts
-  // For this demo, we'll use a standard layout
+  // 1. إضافة الخط للذاكرة الافتراضية (VFS) وتفعيله
+  doc.addFileToVFS('Amiri-Regular.ttf', AMIRI_FONT_BASE64);
+  doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+  doc.setFont('Amiri'); 
   
   doc.setFontSize(20);
   doc.text('Bousala - University of El Oued', 105, 20, { align: 'center' });
   doc.setFontSize(16);
-  doc.text('SDG Analysis Report', 105, 30, { align: 'center' });
+  doc.text('تقرير تحليل أهداف التنمية المستدامة (SDG)', 105, 30, { align: 'center' });
   
   doc.setFontSize(11);
-  doc.text(`Student: ${user.displayName}`, 20, 45);
-  doc.text(`Student ID: ${user.studentId || 'N/A'}`, 20, 52);
-  doc.text(`Faculty: ${user.faculty || 'N/A'}`, 20, 59);
-  doc.text(`Department: ${user.department || 'N/A'}`, 20, 66);
-  doc.text(`Supervisor: ${user.supervisorName || 'N/A'}`, 20, 73);
+  // تحويل المعلومات لليمين
+  doc.text(`الطالب: ${user.displayName}`, 190, 45, { align: 'right' });
+  doc.text(`رقم الطالب: ${user.studentId || 'غير متوفر'}`, 190, 52, { align: 'right' });
+  doc.text(`الكلية: ${user.faculty || 'غير متوفر'}`, 190, 59, { align: 'right' });
+  doc.text(`القسم: ${user.department || 'غير متوفر'}`, 190, 66, { align: 'right' });
+  doc.text(`الأستاذ المشرف: ${user.supervisorName || 'غير متوفر'}`, 190, 73, { align: 'right' });
   
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, 45);
-  doc.text(`Overall SDG Alignment: ${result.overallSdgAlignment}%`, 140, 52);
-  doc.text(`Status: ${user.supervisorStatus || 'Independent'}`, 140, 59);
+  doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-DZ')}`, 20, 45);
+  doc.text(`نسبة التوافق الكلية: ${result.overallSdgAlignment}%`, 20, 52);
+  doc.text(`الحالة: ${user.supervisorStatus === 'approved' ? 'مصادق عليه' : 'قيد المراجعة'}`, 20, 59);
 
   doc.setFontSize(14);
-  doc.text('Summary', 20, 85);
+  doc.text('الملخص التنفيذي', 190, 85, { align: 'right' });
   doc.setFontSize(10);
   const splitSummary = doc.splitTextToSize(result.summary, 170);
-  doc.text(splitSummary, 20, 92);
+  doc.text(splitSummary, 190, 92, { align: 'right' });
 
   let currentY = 92 + (splitSummary.length * 5) + 10;
 
   doc.setFontSize(14);
-  doc.text('SDG Alignment Scores', 20, currentY);
+  doc.text('تحليل التوافق مع أهداف التنمية المستدامة', 190, currentY, { align: 'right' });
   currentY += 7;
 
+  // عكس ترتيب الأعمدة لجدول SDG: [الرابط، الدليل، النسبة، الهدف]
   const tableData = result.sdgScores.map(s => [
-    `Goal ${s.goal}: ${s.title}`,
-    `${s.score}%`,
+    s.link,
     s.evidence,
-    s.link
+    `${s.score}%`,
+    `الهدف ${s.goal}: ${s.title}`
   ]);
 
   try {
     autoTable(doc, {
       startY: currentY,
-      head: [['SDG Goal', 'Score', 'Evidence', 'UN Link']],
+      head: [['رابط الأمم المتحدة', 'الدليل من النص', 'النسبة', 'هدف التنمية المستدامة']],
       body: tableData,
       theme: 'striped',
-      styles: { fontSize: 8, font: 'helvetica' },
+      styles: { fontSize: 8, font: 'Amiri', halign: 'right' },
       headStyles: { fillColor: [0, 77, 51] }
     });
 
@@ -62,23 +69,24 @@ export const generatePDF = (result: AnalysisResult, user: UserProfile) => {
     currentY = finalY + 15;
 
     doc.setFontSize(14);
-    doc.text('ASAM Matrix Sustainability Scorecard', 20, currentY);
+    doc.text('بطاقة نتائج مصفوفة ASAM للاستدامة', 190, currentY, { align: 'right' });
     currentY += 7;
 
+    // عكس ترتيب أعمدة مصفوفة ASAM: [المؤشر، النتيجة، المحور]
     const asamData = [
-      ['Strategic Alignment', `${result.asamMatrix.strategicAlignment.score}/25`, result.asamMatrix.strategicAlignment.kpi],
-      ['Eco-Design & Circularity', `${result.asamMatrix.ecoDesign.score}/25`, result.asamMatrix.ecoDesign.kpi],
-      ['Human-Centric Impact', `${result.asamMatrix.humanImpact.score}/25`, result.asamMatrix.humanImpact.kpi],
-      ['Viability & Scalability', `${result.asamMatrix.viability.score}/25`, result.asamMatrix.viability.kpi],
-      ['Total Alignment', `${result.asamMatrix.totalAlignment}/100`, 'Comprehensive Model']
+      [result.asamMatrix.strategicAlignment.kpi, `${result.asamMatrix.strategicAlignment.score}/25`, 'التوجيه الاستراتيجي'],
+      [result.asamMatrix.ecoDesign.kpi, `${result.asamMatrix.ecoDesign.score}/25`, 'التصميم البيئي والدوراني'],
+      [result.asamMatrix.humanImpact.kpi, `${result.asamMatrix.humanImpact.score}/25`, 'الأثر الإنساني والاجتماعي'],
+      [result.asamMatrix.viability.kpi, `${result.asamMatrix.viability.score}/25`, 'الجدوى والاستدامة التشغيلية'],
+      ['نموذج شامل', `${result.asamMatrix.totalAlignment}/100`, 'المواءمة الكلية']
     ];
 
     autoTable(doc, {
       startY: currentY,
-      head: [['Quadrant', 'Score', 'KPI']],
+      head: [['المؤشر (KPI)', 'الدرجة', 'المحور / الربع']],
       body: asamData,
       theme: 'grid',
-      styles: { fontSize: 9, font: 'helvetica' },
+      styles: { fontSize: 9, font: 'Amiri', halign: 'right' },
       headStyles: { fillColor: [16, 185, 129] }
     });
 
