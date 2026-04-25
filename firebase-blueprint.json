@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information and roles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "supervisor", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" },
+        "studentId": { "type": "string" },
+        "faculty": { "type": "string" },
+        "department": { "type": "string" },
+        "academicLevel": { "type": "string" },
+        "phoneNumber": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "AnalysisRecord": {
+      "title": "AnalysisRecord",
+      "description": "Stored analysis results for abstracts",
+      "type": "object",
+      "properties": {
+        "studentUid": { "type": "string" },
+        "studentName": { "type": "string" },
+        "abstractText": { "type": "string" },
+        "results": { "type": "object" },
+        "sdgScores": { "type": "array" },
+        "recommendations": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "reviewed"] },
+        "supervisorComment": { "type": "string" },
+        "supervisorUid": { "type": "string" }
+      },
+      "required": ["studentUid", "abstractText", "results"]
+    },
+    "LoginLog": {
+      "title": "LoginLog",
+      "description": "History of user logins",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "role": { "type": "string" }
+      },
+      "required": ["uid", "timestamp"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Stored chat conversations",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "messages": { "type": "array" },
+        "analysis": { "type": "object" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "messages"]
+    },
+    "P2PMessage": {
+      "title": "P2PMessage",
+      "description": "Individual chat message between users",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["chatId", "senderId", "receiverId", "text", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "/analyses/{analysisId}": {
+      "schema": "AnalysisRecord",
+      "description": "Analysis records"
+    },
+    "/login_logs/{logId}": {
+      "schema": "LoginLog",
+      "description": "Login history"
+    },
+    "/conversations/{convId}": {
+      "schema": "Conversation",
+      "description": "Chat conversations"
+    },
+    "/p2p_messages/{msgId}": {
+      "schema": "P2PMessage",
+      "description": "Peer-to-peer chat messages"
+    }
+  }
+}

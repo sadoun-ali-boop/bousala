@@ -1,0 +1,21 @@
+{
+  "name": "Bousla - بوصلة",
+  "short_name": "Bousla",
+  "description": "منصة تحليل مذكرات جامعة الوادي",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFCFB",
+  "theme_color": "#004d33",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/bousla/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/bousla/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
