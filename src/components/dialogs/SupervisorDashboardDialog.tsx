@@ -226,7 +226,7 @@ export function SupervisorDashboardDialog({
                         student.supervisorStatus === 'pending' && student.supervisorUid === user?.uid ? (
                           <div className="flex gap-2">
                              <Button 
-                               onClick={() => onReject(student.uid, student.displayName)}
+                               onClick={() => onReject(student.id, student.displayName)}
                                variant="outline" 
                                className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 font-bold px-4 h-10"
                              >
@@ -234,7 +234,7 @@ export function SupervisorDashboardDialog({
                                {t.reject}
                              </Button>
                              <Button 
-                               onClick={() => onApprove(student.uid, student.displayName)}
+                               onClick={() => onApprove(student.id, student.displayName)}
                                className="rounded-xl bg-blue-600 hover:bg-blue-700 font-bold px-4 h-10 text-white"
                              >
                                <CheckCircle2 size={18} className={uiLang === "ar" ? "ml-2" : "mr-2"} />
